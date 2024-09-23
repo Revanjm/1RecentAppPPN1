@@ -1,53 +1,58 @@
-sh
-#!/bin/bash
+get_recent_apps() {
+  # Получаем dumpsys_output, исключая mHiddenTasks=
+  dumpsys_output=$(dumpsys activity recents | grep -v 'mHiddenTasks=')
 
-DB_PATH="/storage/emulated/0/.recentappppn1/.db/main.db"
+  # Извлекаем recent_apps
+  recent_apps=$(echo "$dumpsys_output" | grep -E 'A=|I=' | sed -E 's/.*A=[0-9]+://;s/.*I=//;s/Task\{[0-9a-f]+ //;s/\}//' | sed 's/[^a-zA-Z0-9.-]//g')
 
-# Проверяем, существует ли база данных
-if [ ! -f "$DB_PATH" ]; then
-    exit 1
-fi
+  # Возвращаем полученные данные
+  echo "$recent_apps"
+}
 
-# Начало измерения времени
-start_time=$(date +%s%3N)
+# Преобразование массива в строку с разделителем /=\
+convert_to_string() {
+  local apps_array=("$@")
+  local app_string=""
 
-# Получаем данные из dumpsys activity, исключая hidden tasks и фильтруя ненужные приложения
-recent_apps=$(dumpsys activity | awk '/Recent tasks/{f=1} /mHiddenTasks/{f=0} f && /A=|I=/ {gsub(/.*A=[0-9]+:|.*I=|Task\\{[0-9a-f]+ |\\}/,""); if ($1 !~ /com\.miui\.home|com\.ppnapptest\.quickpanel1/) print $1}')
+  for app in "${apps_array[@]}"; do
+    app_string+="$app/=/"
+  done
 
-# Отбор неправильных форматов приложений и получение правильных пакетов
-invalid_apps=$(echo "$recent_apps" | grep -vE '^[a-zA-Z0-9]+\.[a-zA-Z0-9\.]+$')
-if [ -n "$invalid_apps" ]; then
-  replacement=$(su -c "dumpsys package | grep -B 20 \"/$invalid_apps\" | grep -oE '[^ ]+/$invalid_apps' | cut -d '/' -f 1 | sort | uniq")
-  recent_apps=$(echo "$recent_apps" | sed "s|$invalid_apps|$replacement|g")
-fi
+  # Удаляем последний разделитель /=\
+  echo "${app_string%/=/}"
+}
 
-# Преобразуем список приложений в массив
-apps_array=($(echo "$recent_apps" | tr '\n' ' '))
+# Инициализация
+previous_apps=$(get_recent_apps)
 
-columns="id"
-values="1"
+# Основной цикл
+while true; do
+  # Ждём 0.1 секунды
+  sleep 0.1
 
-# Создаем список колонок и значений для записи в базу данных
-for i in "${!apps_array[@]}"; do
-    column_name="ra$(($i + 1))"
-    columns+=", $column_name"
-    value="${apps_array[$i]}"
-    values+=", \"$value\""
+  # Получаем обновлённые данные recent_apps
+  current_apps=$(get_recent_apps)
+
+  # Сравнение с предыдущими данными
+  if [[ "$previous_apps" != "$current_apps" ]]; then
+    # Находим invalid_apps
+    invalid_apps=$(echo "$current_apps" | grep -vE '^[a-zA-Z0-9]+\.[a-zA-Z0-9\.]+$')
+
+    # Если есть invalid_apps, выполняем замену
+    if [ -n "$invalid_apps" ]; then
+      replacement=$(su -c "dumpsys package | grep -B 20 \"/$invalid_apps\" | grep -oE '[^ ]+/$invalid_apps' | cut -d '/' -f 1 | sort | uniq")
+      recent_app_cl=$(echo "$current_apps" | sed "s|$invalid_apps|$replacement|g")
+    else
+      recent_app_cl="$current_apps"
+    fi
+
+    # Преобразуем recent_app_cl в строку
+    app_string=$(convert_to_string "${recent_app_cl[@]}")
+
+    # Выполняем команду am broadcast
+    am broadcast -a android.intent.action.SEND --es run_function "$app_string" -n com.ppnapptest.имя_вашего_приложения/.IntIntReceiver
+
+    # Обновляем previous_apps
+    previous_apps="$current_apps"
+  fi
 done
-
-# Выполняем SQLite команду с параметром -nocopy
-sqlite3 -nocopy "$DB_PATH" <<EOF
-PRAGMA journal_mode = MEMORY;
-BEGIN TRANSACTION;
-DELETE FROM main WHERE id = 1;
-INSERT INTO main ($columns)
-VALUES ($values);
-COMMIT;
-EOF
-
-# Окончание измерения времени
-end_time=$(date +%s%3N)
-execution_time=$((end_time - start_time))
-
-# Финальный вывод после завершения скрипта
-echo "Время выполнения скрипта: $execution_time мс"

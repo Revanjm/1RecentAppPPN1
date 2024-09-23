@@ -14,11 +14,20 @@ class RecentAppsRepository(private val context: Context) {
 
     suspend fun updateRecentApps() {
         withContext(Dispatchers.IO) {
-            val dbHelper = RecentAppsDbHelper(context)
-            val recentAppsList = dbHelper.getRecentApps()
-            Log.d("RecentAppsRepository", "Recent apps list: $recentAppsList")
-            withContext(Dispatchers.Main) {
-                _recentApps.value = recentAppsList
+            try {
+                val dbHelper = RecentAppsDbHelper(context)
+                val recentAppsList = dbHelper.getRecentApps()
+
+                if (recentAppsList == null) {
+                    Log.e("RecentAppsRepository", "Failed to retrieve recent apps. List is null.")
+                } else {
+                    Log.d("RecentAppsRepository", "Recent apps list: $recentAppsList")
+                    withContext(Dispatchers.Main) {
+                        _recentApps.value = recentAppsList
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("RecentAppsRepository", "Error updating recent apps: ${e.message}")
             }
         }
     }

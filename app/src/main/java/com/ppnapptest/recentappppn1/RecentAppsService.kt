@@ -36,33 +36,36 @@ class RecentAppsService : Service() {
 
     private fun startUpdatingRecentApps() {
         job = serviceScope.launch(Dispatchers.IO) {
-            while (isActive) {
-                try {
-                    val shell = Shell.getShell()
-                    if (shell.isRoot) {
-                        val result = Shell.cmd("su -c '/system/bin/sh /storage/emulated/0/.recentappppn1/.sh/updatMainRA.sh'").exec()
-
-                        if (result.isSuccess) {
-                            Log.d("RecentAppsService", "Скрипт успешно выполнен")
-                            repository.updateRecentApps()
-                            delay(500L)
-                        } else {
-                            Log.e("RecentAppsService", "Ошибка выполнения скрипта: ${result.code} - ${result.err}")
-                            withContext(Dispatchers.Main) {
-                                Toast.makeText(this@RecentAppsService, "Ошибка выполнения скрипта", Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                    } else {
-                        Log.e("RecentAppsService", "Root права не получены")
-                        withContext(Dispatchers.Main) {
-                            Toast.makeText(this@RecentAppsService, "Нет root прав", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                } catch (e: Exception) {
-                    Log.e("RecentAppsService", "Ошибка: ${e.message}")
+            try {
+                // Запрос root прав через явный вызов su
+                if (!Shell.rootAccess()) {
+                    Log.e("RecentAppsService", "Root права не получены")
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(this@RecentAppsService, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@RecentAppsService, "Нет root прав", Toast.LENGTH_SHORT).show()
                     }
+                    stopSelf()
+                    return@launch
+                }
+
+                while (isActive) {
+                    val result = Shell.su("/system/bin/sh /storage/emulated/0/.recentappppn1/.sh/updatMainRA.sh").exec()
+
+                    if (result.isSuccess) {
+                        Log.d("RecentAppsService", "Скрипт успешно выполнен")
+                        repository.updateRecentApps()
+                        delay(3000L)
+                    } else {
+                        Log.e("RecentAppsService", "Ошибка выполнения скрипта: ${result.code} - ${result.err}")
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(this@RecentAppsService, "Ошибка выполнения скрипта: ${result.err}", Toast.LENGTH_SHORT).show()
+                        }
+                        delay(500L)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("RecentAppsService", "Ошибка: ${e.message}")
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@RecentAppsService, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
             }
         }

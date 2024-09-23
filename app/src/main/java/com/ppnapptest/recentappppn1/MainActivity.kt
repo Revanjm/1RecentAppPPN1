@@ -2,6 +2,8 @@ package com.ppnapptest.recentappppn1
 
 import android.Manifest
 import android.app.ActivityManager
+import android.app.AppOpsManager
+import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -30,6 +32,8 @@ import java.io.IOException
 class MainActivity : AppCompatActivity() {
 
     private val PERMISSION_REQUEST_CODE = 1
+    private val NOTIFICATION_PERMISSION_REQUEST_CODE = 2
+    private val USAGE_STATS_PERMISSION_CODE = 3
     private lateinit var viewModel: MainViewModel
     private lateinit var recentAppsTextView: TextView
 
@@ -41,7 +45,6 @@ class MainActivity : AppCompatActivity() {
 
         viewModel = ViewModelProvider(this, MainViewModelFactory(RecentAppsRepository(this)))[MainViewModel::class.java]
 
-        // Наблюдение за recentApps и обновление TextView
         viewModel.recentApps.observe(this) { data ->
             Log.d("MainActivity", "Recent apps: $data")
             recentAppsTextView.text = if (data.isNotEmpty()) {
@@ -51,7 +54,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-
         val startServiceButton: Button = findViewById(R.id.startServiceButton)
         val stopServiceButton: Button = findViewById(R.id.stopServiceButton)
 
@@ -60,7 +62,7 @@ class MainActivity : AppCompatActivity() {
             if (!isServiceRunning(RecentAppsService::class.java)) {
                 startService(Intent(this, RecentAppsService::class.java))
             }
-            viewModel.updateRecentApps() // Принудительное обновление данных при каждом нажатии
+            viewModel.updateRecentApps()
         }
 
         stopServiceButton.setOnClickListener {
@@ -73,16 +75,17 @@ class MainActivity : AppCompatActivity() {
         }
 
         checkStoragePermissions()
+        checkNotificationPermission()
+        checkUsageStatsPermission()
 
-        // Автоматическое выполнение каждые 3 секунды
         startAutoUpdate()
     }
 
     private fun startAutoUpdate() {
         lifecycleScope.launch {
             while (true) {
-                delay(50)  // Задержка 3 секунды
-                viewModel.updateRecentApps()  // Обновление данных
+                delay(900)
+                viewModel.updateRecentApps()
             }
         }
     }
@@ -147,18 +150,24 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == PERMISSION_REQUEST_CODE) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                setupAppFolders()
-            } else {
-                Snackbar.make(findViewById(android.R.id.content), "Для работы приложения необходим доступ к файлам", Snackbar.LENGTH_INDEFINITE)
-                    .setAction("Предоставить") {
-                        checkStoragePermissions()
-                    }
-                    .show()
+    private fun checkNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), NOTIFICATION_PERMISSION_REQUEST_CODE)
             }
+        }
+    }
+
+    private fun checkUsageStatsPermission() {
+        val appOpsManager = getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
+        val mode = appOpsManager.checkOpNoThrow(
+            AppOpsManager.OPSTR_GET_USAGE_STATS,
+            android.os.Process.myUid(),
+            packageName
+        )
+        if (mode != AppOpsManager.MODE_ALLOWED) {
+            val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
+            startActivityForResult(intent, USAGE_STATS_PERMISSION_CODE)
         }
     }
 
