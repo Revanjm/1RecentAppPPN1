@@ -68,4 +68,9 @@ class NotificationHelper(private val context: Context) {
 
         notificationManager.notify(notificationId, notification)
     }
+
+    fun cancelNotification() {
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.cancel(notificationId) // Удаляем уведомление по его ID
+    }
 }

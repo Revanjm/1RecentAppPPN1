@@ -2,8 +2,6 @@ package com.ppnapptest.recentappppn1
 
 import android.Manifest
 import android.app.ActivityManager
-import android.app.AppOpsManager
-import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -26,22 +24,21 @@ import com.google.android.material.snackbar.Snackbar
 import com.topjohnwu.superuser.Shell
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.io.File
-import java.io.IOException
 
 class MainActivity : AppCompatActivity() {
 
     private val PERMISSION_REQUEST_CODE = 1
     private val NOTIFICATION_PERMISSION_REQUEST_CODE = 2
-    private val USAGE_STATS_PERMISSION_CODE = 3
     private lateinit var viewModel: MainViewModel
     private lateinit var recentAppsTextView: TextView
+    private lateinit var serviceStatusTextView: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         recentAppsTextView = findViewById(R.id.recentAppsTextView)
+        serviceStatusTextView = findViewById(R.id.serviceStatusTextView)
 
         viewModel = ViewModelProvider(this, MainViewModelFactory(RecentAppsRepository(this)))[MainViewModel::class.java]
 
@@ -61,6 +58,7 @@ class MainActivity : AppCompatActivity() {
             vibrate()
             if (!isServiceRunning(RecentAppsService::class.java)) {
                 startService(Intent(this, RecentAppsService::class.java))
+                updateServiceStatus(true) // Обновляем статус сервиса как запущен
             }
             viewModel.updateRecentApps()
         }
@@ -68,6 +66,7 @@ class MainActivity : AppCompatActivity() {
         stopServiceButton.setOnClickListener {
             vibrate()
             stopService(Intent(this, RecentAppsService::class.java))
+            updateServiceStatus(false) // Обновляем статус сервиса как остановлен
         }
 
         lifecycleScope.launch {
@@ -76,9 +75,11 @@ class MainActivity : AppCompatActivity() {
 
         checkStoragePermissions()
         checkNotificationPermission()
-        checkUsageStatsPermission()
 
         startAutoUpdate()
+
+        // Проверяем статус сервиса при запуске приложения
+        updateServiceStatus(isServiceRunning(RecentAppsService::class.java))
     }
 
     private fun startAutoUpdate() {
@@ -100,6 +101,18 @@ class MainActivity : AppCompatActivity() {
         return false
     }
 
+    private fun updateServiceStatus(isRunning: Boolean) {
+        if (isRunning) {
+            serviceStatusTextView.text = "Running"
+            serviceStatusTextView.setBackgroundColor(ContextCompat.getColor(this, android.R.color.holo_green_dark))
+            serviceStatusTextView.setTextColor(ContextCompat.getColor(this, android.R.color.black))
+        } else {
+            serviceStatusTextView.text = "Stopped"
+            serviceStatusTextView.setBackgroundColor(ContextCompat.getColor(this, android.R.color.black))
+            serviceStatusTextView.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_dark))
+        }
+    }
+
     private fun vibrate() {
         val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -111,9 +124,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun requestRootAccess() {
         Shell.getShell { shell ->
-            if (shell.isRoot) {
-                copyFilesFromAssetsWithRoot()
-            } else {
+            if (!shell.isRoot) {
                 Log.e("MainActivity", "Root права не получены")
                 Toast.makeText(this, "Для работы приложения необходимы root права", Toast.LENGTH_SHORT).show()
             }
@@ -129,8 +140,6 @@ class MainActivity : AppCompatActivity() {
                         startActivity(intent)
                     }
                     .show()
-            } else {
-                setupAppFolders()
             }
         } else {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
@@ -144,8 +153,6 @@ class MainActivity : AppCompatActivity() {
                         )
                     }
                     .show()
-            } else {
-                setupAppFolders()
             }
         }
     }
@@ -156,64 +163,5 @@ class MainActivity : AppCompatActivity() {
                 ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), NOTIFICATION_PERMISSION_REQUEST_CODE)
             }
         }
-    }
-
-    private fun checkUsageStatsPermission() {
-        val appOpsManager = getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
-        val mode = appOpsManager.checkOpNoThrow(
-            AppOpsManager.OPSTR_GET_USAGE_STATS,
-            android.os.Process.myUid(),
-            packageName
-        )
-        if (mode != AppOpsManager.MODE_ALLOWED) {
-            val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
-            startActivityForResult(intent, USAGE_STATS_PERMISSION_CODE)
-        }
-    }
-
-    private fun copyFilesFromAssetsWithRoot() {
-        val dbFolder = "/storage/emulated/0/.recentappppn1/.db/"
-        val shFolder = "/storage/emulated/0/.recentappppn1/.sh/"
-
-        createFolderWithRoot(dbFolder)
-        createFolderWithRoot(shFolder)
-
-        copyAssetFileWithRoot("db/main.db", "$dbFolder/main.db")
-
-        val shFiles = assets.list("sh") ?: return
-        for (shFileName in shFiles) {
-            copyAssetFileWithRoot("sh/$shFileName", "$shFolder/$shFileName")
-        }
-    }
-
-    private fun copyAssetFileWithRoot(assetPath: String, outFilePath: String) {
-        try {
-            val outFile = File(outFilePath)
-            if (!outFile.exists()) {
-                val inputStream = assets.open(assetPath)
-                val tempFile = File.createTempFile("temp_", null, cacheDir)
-                val outputStream = tempFile.outputStream()
-
-                inputStream.copyTo(outputStream)
-
-                outputStream.flush()
-                outputStream.close()
-                inputStream.close()
-
-                Shell.cmd("cp ${tempFile.absolutePath} $outFilePath").exec()
-            }
-        } catch (e: IOException) {
-            Log.e("MainActivity", "Ошибка при копировании файла: ${e.message}")
-            Toast.makeText(this, "Ошибка при копировании файла", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun createFolderWithRoot(path: String) {
-        Shell.cmd("mkdir -p $path").exec()
-    }
-
-    private fun setupAppFolders() {
-        createFolderWithRoot("/storage/emulated/0/.recentappppn1/.db/")
-        createFolderWithRoot("/storage/emulated/0/.recentappppn1/.sh/")
     }
 }

@@ -1,7 +1,8 @@
 package com.ppnapptest.recentappppn1
 
-import android.annotation.SuppressLint
+import android.app.NotificationManager
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.os.IBinder
 import android.util.Log
@@ -9,7 +10,6 @@ import android.widget.Toast
 import com.topjohnwu.superuser.Shell
 import kotlinx.coroutines.*
 
-@SuppressLint("ForegroundServiceType")
 class RecentAppsService : Service() {
 
     private lateinit var repository: RecentAppsRepository
@@ -30,14 +30,17 @@ class RecentAppsService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startUpdatingRecentApps()
+        // Если сервис уже запущен, не создаем новую задачу
+        if (job == null || job?.isCancelled == true) {
+            startUpdatingRecentApps()
+        }
         return START_STICKY
     }
 
     private fun startUpdatingRecentApps() {
         job = serviceScope.launch(Dispatchers.IO) {
             try {
-                // Запрос root прав через явный вызов su
+                // Запрос root прав
                 if (!Shell.rootAccess()) {
                     Log.e("RecentAppsService", "Root права не получены")
                     withContext(Dispatchers.Main) {
@@ -75,6 +78,10 @@ class RecentAppsService : Service() {
         super.onDestroy()
         job?.cancel()
         serviceScope.cancel()
+
+        // Удаляем уведомление и показываем Toast
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.cancel(1)
         Toast.makeText(this, "Сервис RecentAppsService завершён", Toast.LENGTH_SHORT).show()
     }
 }

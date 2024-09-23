@@ -1,5 +1,6 @@
 package com.ppnapptest.recentappppn1
 
+import android.app.ActivityManager
 import android.content.Context
 import android.util.Log
 import androidx.lifecycle.LiveData
@@ -15,16 +16,15 @@ class RecentAppsRepository(private val context: Context) {
     suspend fun updateRecentApps() {
         withContext(Dispatchers.IO) {
             try {
-                val dbHelper = RecentAppsDbHelper(context)
-                val recentAppsList = dbHelper.getRecentApps()
+                val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+                val recentTasks = activityManager.appTasks // Получаем последние приложения через appTasks
+                val recentAppsList = recentTasks.mapNotNull { it.taskInfo?.baseIntent?.component?.packageName }
+                    .filter { it.isNotEmpty() }
 
-                if (recentAppsList == null) {
-                    Log.e("RecentAppsRepository", "Failed to retrieve recent apps. List is null.")
-                } else {
-                    Log.d("RecentAppsRepository", "Recent apps list: $recentAppsList")
-                    withContext(Dispatchers.Main) {
-                        _recentApps.value = recentAppsList
-                    }
+                Log.d("RecentAppsRepository", "Recent apps list: $recentAppsList")
+                
+                withContext(Dispatchers.Main) {
+                    _recentApps.value = recentAppsList
                 }
             } catch (e: Exception) {
                 Log.e("RecentAppsRepository", "Error updating recent apps: ${e.message}")

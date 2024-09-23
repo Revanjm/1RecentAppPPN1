@@ -5,33 +5,31 @@ import android.content.Context
 import android.content.Intent
 import android.os.Handler
 import android.os.Looper
-import android.widget.Toast
 
 class RecentAppsReceiver : BroadcastReceiver() {
 
-    // Переменная для хранения времени последнего уведомления
     private var lastNotificationTime: Long = 0
+    private var isReceiverActive = true // Флаг для контроля работы ресивера
 
     override fun onReceive(context: Context, intent: Intent) {
         val action = intent.action
-        if (action == "android.intent.action.SEND") {
-            val message = intent.getStringExtra("run_function")
 
-            // Текущее время
+        // Отключение ресивера
+        if (action == "android.intent.action.STOP_RECEIVER") {
+            isReceiverActive = false
+            val notificationHelper = NotificationHelper(context)
+            notificationHelper.cancelNotification() // Метод для отмены уведомления
+            return
+        }
+
+        if (isReceiverActive && action == "android.intent.action.SEND") {
+            val message = intent.getStringExtra("run_function")
             val currentTime = System.currentTimeMillis()
 
-            // Проверяем, прошло ли 1.5 секунды с момента последнего уведомления
             if (currentTime - lastNotificationTime >= 1500) {
                 lastNotificationTime = currentTime
-
-                // Используем NotificationHelper для отправки уведомления
                 val notificationHelper = NotificationHelper(context)
                 notificationHelper.showNotification("Поймал", "Поймал: $message")
-
-                // Показать Toast
-                Handler(Looper.getMainLooper()).post {
-                    Toast.makeText(context, "Поймал: $message", Toast.LENGTH_SHORT).show()
-                }
             }
         }
     }
