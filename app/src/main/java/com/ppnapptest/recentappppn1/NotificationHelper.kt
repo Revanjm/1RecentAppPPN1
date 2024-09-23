@@ -46,4 +46,26 @@ class NotificationHelper(private val context: Context) {
             .setOngoing(true) // Постоянное уведомление
             .build()
     }
+
+    fun showNotification(title: String, message: String) {
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        // Убедитесь, что канал создан для Android 8.0 и выше
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                "recent_apps_channel",
+                "Recent Apps Monitoring",
+                NotificationManager.IMPORTANCE_LOW
+            )
+            notificationManager.createNotificationChannel(channel)
+        }
+
+        val notification = NotificationCompat.Builder(context, "recent_apps_channel")
+            .setContentTitle(title)
+            .setContentText(message)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .build()
+
+        notificationManager.notify(notificationId, notification)
+    }
 }
