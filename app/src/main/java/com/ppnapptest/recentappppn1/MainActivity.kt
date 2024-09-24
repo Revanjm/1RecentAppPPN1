@@ -238,10 +238,13 @@ class MainActivity : AppCompatActivity() {
     private fun updateServiceStatusUI(isRunning: Boolean, statusTextView: TextView) {
         if (isRunning) {
             statusTextView.text = "Running"
-            statusTextView.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_dark))
+            statusTextView.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_light))
+            statusTextView.setBackgroundColor(ContextCompat.getColor(this, android.R.color.black))
         } else {
             statusTextView.text = "Stopped"
             statusTextView.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_dark))
+            statusTextView.setBackgroundColor(ContextCompat.getColor(this, android.R.color.black))
         }
     }
+
 }
