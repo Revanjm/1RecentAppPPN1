@@ -93,7 +93,6 @@ class MainActivity : AppCompatActivity() {
                 Log.d("MainActivity", "Intent received")
                 val recentAppCl = intent.getStringExtra("run_function")
                 if (recentAppCl != null) {
-
                     updateUI(recentAppCl)
                 } else {
                     Log.d("MainActivity", "run_function is null")
@@ -116,8 +115,33 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateUI(newData: String) {
-        // Обновляем текст на экране с новыми данными
-        recentAppsTextView.text = newData
+        // Разделяем строку по разделителю (например, если это список приложений через \n)
+        val dataFromIntent = newData.split("\n")
+
+        // Находим строки таблицы
+        val textView1 = findViewById<TextView>(R.id.text_view_1)
+        val textView2 = findViewById<TextView>(R.id.text_view_2)
+        val textView3 = findViewById<TextView>(R.id.text_view_3)
+        val textView4 = findViewById<TextView>(R.id.text_view_4)
+        val textView5 = findViewById<TextView>(R.id.text_view_5)
+        val textView6 = findViewById<TextView>(R.id.text_view_6)
+        val textView7 = findViewById<TextView>(R.id.text_view_7)
+        val textView8 = findViewById<TextView>(R.id.text_view_8)
+        val textView9 = findViewById<TextView>(R.id.text_view_9)
+        val textView10 = findViewById<TextView>(R.id.text_view_10)
+
+        // Устанавливаем текст для каждой строки, если данные существуют
+        textView1.text = dataFromIntent.getOrNull(0) ?: ""
+        textView2.text = dataFromIntent.getOrNull(1) ?: ""
+        textView3.text = dataFromIntent.getOrNull(2) ?: ""
+        textView4.text = dataFromIntent.getOrNull(4) ?: ""
+        textView5.text = dataFromIntent.getOrNull(5) ?: ""
+        textView6.text = dataFromIntent.getOrNull(6) ?: ""
+        textView7.text = dataFromIntent.getOrNull(7) ?: ""
+        textView8.text = dataFromIntent.getOrNull(8) ?: ""
+        textView9.text = dataFromIntent.getOrNull(9) ?: ""
+        // Продолжить для остальных text_view элементов
+
         Log.d("MainActivity", "UI обновлено с данными: $newData")
     }
 
