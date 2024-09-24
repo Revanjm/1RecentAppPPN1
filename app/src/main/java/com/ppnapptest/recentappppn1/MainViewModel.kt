@@ -21,11 +21,11 @@ class MainViewModel(private val repository: RecentAppsRepository) : ViewModel() 
         }
     }
 
-    // Новый метод для принудительного обновления при нажатии
+    // Метод для принудительного обновления при нажатии
     fun forceUpdateRecentApps() {
         viewModelScope.launch {
             try {
-                // Вызываем обновление данных через скрипт
+                // Принудительное обновление данных
                 repository.updateRecentApps()
             } catch (e: Exception) {
                 Log.e("MainViewModel", "Error forcing update of recent apps: ${e.message}")

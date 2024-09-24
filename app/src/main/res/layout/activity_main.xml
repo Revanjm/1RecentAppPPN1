@@ -3,13 +3,14 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/black"> <!-- Установил черный фон для общего стиля -->
+    android:background="@android:color/black"> <!-- Установлен черный фон для общего стиля -->
 
     <TextView
         android:id="@+id/serviceStatusTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
+        android:background="@drawable/service_status_background"
         android:padding="8dp"
         android:text="Stopped"
         android:textColor="@android:color/white"

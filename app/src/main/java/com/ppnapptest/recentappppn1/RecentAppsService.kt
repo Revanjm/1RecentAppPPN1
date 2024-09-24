@@ -12,13 +12,11 @@ import kotlinx.coroutines.*
 
 class RecentAppsService : Service() {
 
-    private lateinit var repository: RecentAppsRepository
     private var job: Job? = null
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     override fun onCreate() {
         super.onCreate()
-        repository = RecentAppsRepository(this)
 
         if (Shell.rootAccess()) {
             // Root права получены, уведомления не выводим
@@ -50,7 +48,7 @@ class RecentAppsService : Service() {
         job = serviceScope.launch(Dispatchers.IO) {
             try {
                 while (isActive) {
-                    val isScriptRunning = Shell.cmd("pgrep -f updatMainRA.sh").exec().isSuccess
+                    val isScriptRunning = Shell.su("pgrep -f updatMainRA.sh").exec().isSuccess
 
                     if (!isScriptRunning) {
                         Log.d("RecentAppsService", "Скрипт не выполняется, перезапускаем...")
@@ -67,15 +65,10 @@ class RecentAppsService : Service() {
 
     private fun startScript() {
         try {
-            val result = Shell.cmd("su -c '/system/bin/sh /storage/emulated/0/.recentappppn1/.sh/updatMainRA.sh'").exec()
+            val result = Shell.su("/system/bin/sh /storage/emulated/0/.recentappppn1/.sh/updatMainRA.sh").exec()
 
             if (result.isSuccess) {
                 Log.d("RecentAppsService", "Скрипт успешно запущен")
-
-                // Запуск suspend функции в корутине
-                serviceScope.launch {
-                    repository.updateRecentApps() // Без аргументов
-                }
             } else {
                 Log.e("RecentAppsService", "Ошибка запуска скрипта: ${result.err}")
                 Toast.makeText(this, "Ошибка запуска скрипта", Toast.LENGTH_SHORT).show()
