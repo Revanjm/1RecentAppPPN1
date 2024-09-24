@@ -3,8 +3,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/black"> <!-- Установлен черный фон для общего стиля -->
+    android:background="@android:color/black">
 
+    <!-- Статус сервиса -->
     <TextView
         android:id="@+id/serviceStatusTextView"
         android:layout_width="wrap_content"
@@ -21,6 +22,7 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent" />
 
+    <!-- Кнопка запуска сервиса -->
     <Button
         android:id="@+id/startServiceButton"
         android:layout_width="wrap_content"
@@ -35,6 +37,7 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent" />
 
+    <!-- Кнопка остановки сервиса -->
     <Button
         android:id="@+id/stopServiceButton"
         android:layout_width="wrap_content"
@@ -49,6 +52,7 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent" />
 
+    <!-- Текст последних приложений -->
     <TextView
         android:id="@+id/recentAppsTextView"
         android:layout_width="0dp"
@@ -62,146 +66,284 @@
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Добавляем таблицу для отображения значений из интента -->
+    <!-- Таблица для отображения данных -->
     <TableLayout
-        android:id="@+id/table_layout"
-        android:layout_width="0dp"
+        android:id="@+id/recentAppsTable"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
+        android:layout_margin="16dp"
         app:layout_constraintTop_toBottomOf="@+id/recentAppsTextView"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Строка 1 -->
+        <!-- Первая строка -->
         <TableRow
-            android:layout_width="wrap_content"
-            android:layout_height="20px">
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- Порядковый номер -->
+            <TextView
+                android:id="@+id/row_num_1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="3"
+                android:text="1"
+                android:visibility="gone"
+                android:gravity="center"
+                android:textColor="@android:color/white" />
+
+            <!-- Значение -->
             <TextView
                 android:id="@+id/text_view_1"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:textSize="16sp"
-                android:textColor="#FFFFFF"
-                android:gravity="center_vertical" />
+                android:layout_weight="17"
+                android:text=""
+                android:textColor="@android:color/white"
+                android:gravity="start" />
         </TableRow>
 
-        <!-- Строка 2 -->
+        <!-- Вторая строка -->
         <TableRow
-            android:layout_width="wrap_content"
-            android:layout_height="20px">
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- Порядковый номер -->
+            <TextView
+                android:id="@+id/row_num_2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="3"
+                android:text="2"
+                android:visibility="gone"
+                android:gravity="center"
+                android:textColor="@android:color/white" />
+
+            <!-- Значение -->
             <TextView
                 android:id="@+id/text_view_2"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:textSize="16sp"
-                android:textColor="#FFFFFF"
-                android:gravity="center_vertical" />
+                android:layout_weight="17"
+                android:text=""
+                android:textColor="@android:color/white"
+                android:gravity="start" />
         </TableRow>
 
-        <!-- Строка 3 -->
+        <!-- Третья строка -->
         <TableRow
-            android:layout_width="wrap_content"
-            android:layout_height="20px">
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- Порядковый номер -->
+            <TextView
+                android:id="@+id/row_num_3"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="3"
+                android:text="3"
+                android:visibility="gone"
+                android:gravity="center"
+                android:textColor="@android:color/white" />
+
+            <!-- Значение -->
             <TextView
                 android:id="@+id/text_view_3"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:textSize="16sp"
-                android:textColor="#FFFFFF"
-                android:gravity="center_vertical" />
+                android:layout_weight="17"
+                android:text=""
+                android:textColor="@android:color/white"
+                android:gravity="start" />
         </TableRow>
 
-        <!-- Строка 4 -->
+        <!-- Четвертая строка -->
         <TableRow
-            android:layout_width="wrap_content"
-            android:layout_height="20px">
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- Порядковый номер -->
+            <TextView
+                android:id="@+id/row_num_4"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="3"
+                android:text="4"
+                android:visibility="gone"
+                android:gravity="center"
+                android:textColor="@android:color/white" />
+
+            <!-- Значение -->
             <TextView
                 android:id="@+id/text_view_4"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:textSize="16sp"
-                android:textColor="#FFFFFF"
-                android:gravity="center_vertical" />
+                android:layout_weight="17"
+                android:text=""
+                android:textColor="@android:color/white"
+                android:gravity="start" />
         </TableRow>
 
-        <!-- Строка 5 -->
+        <!-- Пятая строка -->
         <TableRow
-            android:layout_width="wrap_content"
-            android:layout_height="20px">
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- Порядковый номер -->
+            <TextView
+                android:id="@+id/row_num_5"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="3"
+                android:text="5"
+                android:visibility="gone"
+                android:gravity="center"
+                android:textColor="@android:color/white" />
+
+            <!-- Значение -->
             <TextView
                 android:id="@+id/text_view_5"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:textSize="16sp"
-                android:textColor="#FFFFFF"
-                android:gravity="center_vertical" />
+                android:layout_weight="17"
+                android:text=""
+                android:textColor="@android:color/white"
+                android:gravity="start" />
         </TableRow>
 
-        <!-- Строка 6 -->
+        <!-- Шестая строка -->
         <TableRow
-            android:layout_width="wrap_content"
-            android:layout_height="20px">
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- Порядковый номер -->
+            <TextView
+                android:id="@+id/row_num_6"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="3"
+                android:text="6"
+                android:visibility="gone"
+                android:gravity="center"
+                android:textColor="@android:color/white" />
+
+            <!-- Значение -->
             <TextView
                 android:id="@+id/text_view_6"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:textSize="16sp"
-                android:textColor="#FFFFFF"
-                android:gravity="center_vertical" />
+                android:layout_weight="17"
+                android:text=""
+                android:textColor="@android:color/white"
+                android:gravity="start" />
         </TableRow>
 
-        <!-- Строка 7 -->
+        <!-- Седьмая строка -->
         <TableRow
-            android:layout_width="wrap_content"
-            android:layout_height="20px">
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- Порядковый номер -->
+            <TextView
+                android:id="@+id/row_num_7"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="3"
+                android:text="7"
+                android:visibility="gone"
+                android:gravity="center"
+                android:textColor="@android:color/white" />
+
+            <!-- Значение -->
             <TextView
                 android:id="@+id/text_view_7"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:textSize="16sp"
-                android:textColor="#FFFFFF"
-                android:gravity="center_vertical" />
+                android:layout_weight="17"
+                android:text=""
+                android:textColor="@android:color/white"
+                android:gravity="start" />
         </TableRow>
 
-        <!-- Строка 8 -->
+        <!-- Восьмая строка -->
         <TableRow
-            android:layout_width="wrap_content"
-            android:layout_height="20px">
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- Порядковый номер -->
+            <TextView
+                android:id="@+id/row_num_8"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="3"
+                android:text="8"
+                android:visibility="gone"
+                android:gravity="center"
+                android:textColor="@android:color/white" />
+
+            <!-- Значение -->
             <TextView
                 android:id="@+id/text_view_8"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:textSize="16sp"
-                android:textColor="#FFFFFF"
-                android:gravity="center_vertical" />
+                android:layout_weight="17"
+                android:text=""
+                android:textColor="@android:color/white"
+                android:gravity="start" />
         </TableRow>
 
-        <!-- Строка 9 -->
+        <!-- Девятая строка -->
         <TableRow
-            android:layout_width="wrap_content"
-            android:layout_height="20px">
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- Порядковый номер -->
+            <TextView
+                android:id="@+id/row_num_9"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="3"
+                android:text="9"
+                android:gravity="center"
+                android:visibility="gone"
+                android:textColor="@android:color/white" />
+
+            <!-- Значение -->
             <TextView
                 android:id="@+id/text_view_9"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:textSize="16sp"
-                android:textColor="#FFFFFF"
-                android:gravity="center_vertical" />
+                android:layout_weight="17"
+                android:text=""
+                android:textColor="@android:color/white"
+                android:gravity="start" />
         </TableRow>
 
-        <!-- Строка 10 -->
+        <!-- Десятая строка -->
         <TableRow
-            android:layout_width="wrap_content"
-            android:layout_height="20px">
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- Порядковый номер -->
+            <TextView
+                android:id="@+id/row_num_10"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="3"
+                android:text="10"
+                android:gravity="center"
+                android:visibility="gone"
+                android:textColor="@android:color/white" />
+
+            <!-- Значение -->
             <TextView
                 android:id="@+id/text_view_10"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:textSize="16sp"
-                android:textColor="#FFFFFF"
-                android:gravity="center_vertical" />
+                android:layout_weight="17"
+                android:text=""
+                android:textColor="@android:color/white"
+                android:gravity="start" />
         </TableRow>
 
     </TableLayout>

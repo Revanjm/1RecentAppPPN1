@@ -13,6 +13,7 @@ import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings
 import android.util.Log
+import android.view.animation.AnimationUtils
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
@@ -23,6 +24,8 @@ import androidx.lifecycle.ViewModelProvider
 import com.topjohnwu.superuser.Shell
 import java.io.File
 import java.io.IOException
+import android.view.View
+
 
 class MainActivity : AppCompatActivity() {
     private val PERMISSION_REQUEST_CODE = 1
@@ -31,6 +34,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var viewModel: MainViewModel
     private lateinit var recentAppsTextView: TextView
     private lateinit var receiver: BroadcastReceiver
+
+    // Предыдущее состояние строк
+    private var previousData: List<String> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -116,9 +122,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateUI(newData: String) {
         // Разделяем строку по разделителю (например, если это список приложений через \n)
-        val dataFromIntent = newData.split("\n")
+        val currentData = newData.split("\n")
 
-        // Находим строки таблицы
+        // Загружаем анимации
+        val remainAnimation = AnimationUtils.loadAnimation(this, R.anim.remain_animation)  // Анимация для оставшихся строк
+        val disappearAnimation = AnimationUtils.loadAnimation(this, R.anim.disappear_animation)  // Анимация для строк, которые исчезают
+
+        // Найдем строки таблицы (правая колонка)
         val textView1 = findViewById<TextView>(R.id.text_view_1)
         val textView2 = findViewById<TextView>(R.id.text_view_2)
         val textView3 = findViewById<TextView>(R.id.text_view_3)
@@ -130,17 +140,47 @@ class MainActivity : AppCompatActivity() {
         val textView9 = findViewById<TextView>(R.id.text_view_9)
         val textView10 = findViewById<TextView>(R.id.text_view_10)
 
-        // Устанавливаем текст для каждой строки, если данные существуют
-        textView1.text = dataFromIntent.getOrNull(0) ?: ""
-        textView2.text = dataFromIntent.getOrNull(1) ?: ""
-        textView3.text = dataFromIntent.getOrNull(2) ?: ""
-        textView4.text = dataFromIntent.getOrNull(4) ?: ""
-        textView5.text = dataFromIntent.getOrNull(5) ?: ""
-        textView6.text = dataFromIntent.getOrNull(6) ?: ""
-        textView7.text = dataFromIntent.getOrNull(7) ?: ""
-        textView8.text = dataFromIntent.getOrNull(8) ?: ""
-        textView9.text = dataFromIntent.getOrNull(9) ?: ""
-        // Продолжить для остальных text_view элементов
+        // Найдем порядковые номера (левая колонка)
+        val rowNum1 = findViewById<TextView>(R.id.row_num_1)
+        val rowNum2 = findViewById<TextView>(R.id.row_num_2)
+        val rowNum3 = findViewById<TextView>(R.id.row_num_3)
+        val rowNum4 = findViewById<TextView>(R.id.row_num_4)
+        val rowNum5 = findViewById<TextView>(R.id.row_num_5)
+        val rowNum6 = findViewById<TextView>(R.id.row_num_6)
+        val rowNum7 = findViewById<TextView>(R.id.row_num_7)
+        val rowNum8 = findViewById<TextView>(R.id.row_num_8)
+        val rowNum9 = findViewById<TextView>(R.id.row_num_9)
+        val rowNum10 = findViewById<TextView>(R.id.row_num_10)
+
+        val textViews = listOf(textView1, textView2, textView3, textView4, textView5, textView6, textView7, textView8, textView9, textView10)
+        val rowNums = listOf(rowNum1, rowNum2, rowNum3, rowNum4, rowNum5, rowNum6, rowNum7, rowNum8, rowNum9, rowNum10)
+
+        // Проходим по предыдущим данным и применяем анимации
+        previousData.forEachIndexed { index, previousItem ->
+            if (currentData.contains(previousItem)) {
+                // Строка осталась в новом обновлении, применяем одну анимацию
+                textViews.getOrNull(index)?.startAnimation(remainAnimation)
+            } else {
+                // Строка не пришла в новом обновлении, применяем другую анимацию
+                textViews.getOrNull(index)?.startAnimation(disappearAnimation)
+            }
+        }
+
+        // Обновляем текст строк и показываем их снова (с учётом новых данных)
+        textViews.forEachIndexed { index, textView ->
+            val text = currentData.getOrNull(index) ?: ""
+            textView.text = text
+
+            // Если правый текст пустой, скрываем левый номер, иначе показываем его
+            if (text.isBlank()) {
+                rowNums[index].visibility = View.GONE
+            } else {
+                rowNums[index].visibility = View.VISIBLE
+            }
+        }
+
+        // Сохраняем текущее состояние как предыдущее
+        previousData = currentData
 
         Log.d("MainActivity", "UI обновлено с данными: $newData")
     }
@@ -270,5 +310,4 @@ class MainActivity : AppCompatActivity() {
             statusTextView.setBackgroundColor(ContextCompat.getColor(this, android.R.color.black))
         }
     }
-
 }
