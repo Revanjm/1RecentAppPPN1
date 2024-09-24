@@ -125,8 +125,9 @@ class MainActivity : AppCompatActivity() {
         val currentData = newData.split("\n")
 
         // Загружаем анимации
-        val remainAnimation = AnimationUtils.loadAnimation(this, R.anim.remain_animation)  // Анимация для оставшихся строк
-        val disappearAnimation = AnimationUtils.loadAnimation(this, R.anim.disappear_animation)  // Анимация для строк, которые исчезают
+        val slideUpOrDownAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_up_or_down)  // Анимация перемежения
+        val slideOutLeftAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_out_left)  // Анимация для старых элементов
+        val slideInRightAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_in_right)  // Анимация для новых элементов
 
         // Найдем строки таблицы (правая колонка)
         val textView1 = findViewById<TextView>(R.id.text_view_1)
@@ -140,44 +141,28 @@ class MainActivity : AppCompatActivity() {
         val textView9 = findViewById<TextView>(R.id.text_view_9)
         val textView10 = findViewById<TextView>(R.id.text_view_10)
 
-        // Найдем порядковые номера (левая колонка)
-        val rowNum1 = findViewById<TextView>(R.id.row_num_1)
-        val rowNum2 = findViewById<TextView>(R.id.row_num_2)
-        val rowNum3 = findViewById<TextView>(R.id.row_num_3)
-        val rowNum4 = findViewById<TextView>(R.id.row_num_4)
-        val rowNum5 = findViewById<TextView>(R.id.row_num_5)
-        val rowNum6 = findViewById<TextView>(R.id.row_num_6)
-        val rowNum7 = findViewById<TextView>(R.id.row_num_7)
-        val rowNum8 = findViewById<TextView>(R.id.row_num_8)
-        val rowNum9 = findViewById<TextView>(R.id.row_num_9)
-        val rowNum10 = findViewById<TextView>(R.id.row_num_10)
-
         val textViews = listOf(textView1, textView2, textView3, textView4, textView5, textView6, textView7, textView8, textView9, textView10)
-        val rowNums = listOf(rowNum1, rowNum2, rowNum3, rowNum4, rowNum5, rowNum6, rowNum7, rowNum8, rowNum9, rowNum10)
 
         // Проходим по предыдущим данным и применяем анимации
         previousData.forEachIndexed { index, previousItem ->
             if (currentData.contains(previousItem)) {
-                // Строка осталась в новом обновлении, применяем одну анимацию
-                textViews.getOrNull(index)?.startAnimation(remainAnimation)
+                // Строка осталась, применяем анимацию перемежения
+                textViews.getOrNull(index)?.startAnimation(slideUpOrDownAnimation)
             } else {
-                // Строка не пришла в новом обновлении, применяем другую анимацию
-                textViews.getOrNull(index)?.startAnimation(disappearAnimation)
+                // Строка не пришла в новом обновлении, уезжает влево
+                textViews.getOrNull(index)?.startAnimation(slideOutLeftAnimation)
             }
         }
 
         // Обновляем текст строк и показываем их снова (с учётом новых данных)
         textViews.forEachIndexed { index, textView ->
-            // Убираем цифры перед значениями, например: "1 приложение" -> "приложение"
-            val text = currentData.getOrNull(index)?.replace(Regex("^\\d+\\s+"), "") ?: ""
-            textView.text = text
+            val text = currentData.getOrNull(index) ?: ""
 
-            // Если правый текст пустой, скрываем левый номер, иначе показываем его
-            if (text.isBlank()) {
-                rowNums[index].visibility = View.GONE
-            } else {
-                rowNums[index].visibility = View.VISIBLE
+            // Если элемент новый, применяем анимацию появления справа
+            if (previousData.size <= index || previousData[index] != text) {
+                textView.startAnimation(slideInRightAnimation)
             }
+            textView.text = text
         }
 
         // Сохраняем текущее состояние как предыдущее
