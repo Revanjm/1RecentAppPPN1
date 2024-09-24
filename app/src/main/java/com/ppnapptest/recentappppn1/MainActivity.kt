@@ -39,6 +39,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var viewModel: MainViewModel
     private lateinit var recentAppsTextView: TextView
     private lateinit var receiver: BroadcastReceiver
+    private lateinit var serviceStatusTextView: TextView
+    private lateinit var vibrator: Vibrator
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,6 +50,13 @@ class MainActivity : AppCompatActivity() {
         window.setFlags(0, 0)
 
         recentAppsTextView = findViewById(R.id.recentAppsTextView)
+        serviceStatusTextView = findViewById(R.id.serviceStatusTextView)
+        val startServiceButton: Button = findViewById(R.id.startServiceButton)
+        val stopServiceButton: Button = findViewById(R.id.stopServiceButton)
+
+        // Инициализация вибратора
+        vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+
         viewModel = ViewModelProvider(this, MainViewModelFactory(RecentAppsRepository(this)))[MainViewModel::class.java]
         viewModel.recentApps.observe(this) { data ->
             Log.d("MainActivity", "Recent apps: $data")
@@ -60,16 +69,13 @@ class MainActivity : AppCompatActivity() {
         checkPermissions()
         setupAppFolders()
 
-        val startServiceButton: Button = findViewById(R.id.startServiceButton)
-        val stopServiceButton: Button = findViewById(R.id.stopServiceButton)
-        val serviceStatusTextView: TextView = findViewById(R.id.serviceStatusTextView)
-
-        // Update UI based on service running state
+        // Обновление UI на основе состояния сервиса
         val isServiceRunning = isServiceRunning(this, RecentAppsService::class.java)
-        updateServiceStatusUI(isServiceRunning, serviceStatusTextView)
+        updateServiceStatusUI(isServiceRunning)
 
-        // Start service button
+        // Обработчик нажатия кнопки для запуска сервиса
         startServiceButton.setOnClickListener {
+            vibrateOnClick()
             if (!isServiceRunning) {
                 val intent = Intent(this, RecentAppsService::class.java)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -78,17 +84,18 @@ class MainActivity : AppCompatActivity() {
                     startService(intent)
                 }
                 Toast.makeText(this, "Сервис запущен", Toast.LENGTH_SHORT).show()
-                updateServiceStatusUI(true, serviceStatusTextView)
+                updateServiceStatusUI(true)
             }
         }
 
-        // Stop service button
+        // Обработчик нажатия кнопки для остановки сервиса
         stopServiceButton.setOnClickListener {
+            vibrateOnClick()
             if (isServiceRunning) {
                 val intent = Intent(this, RecentAppsService::class.java)
                 stopService(intent)
                 Toast.makeText(this, "Сервис остановлен", Toast.LENGTH_SHORT).show()
-                updateServiceStatusUI(false, serviceStatusTextView)
+                updateServiceStatusUI(false)
             }
         }
     }
@@ -237,7 +244,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // Function to check if the service is running
+    // Функция для проверки состояния сервиса
     private fun isServiceRunning(context: Context, serviceClass: Class<*>): Boolean {
         val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         for (service in manager.getRunningServices(Int.MAX_VALUE)) {
@@ -248,14 +255,25 @@ class MainActivity : AppCompatActivity() {
         return false
     }
 
-    // Function to update UI based on service running status
-    private fun updateServiceStatusUI(isRunning: Boolean, statusTextView: TextView) {
+    // Функция для обновления UI на основе состояния сервиса
+    private fun updateServiceStatusUI(isRunning: Boolean) {
         if (isRunning) {
-            statusTextView.text = "Running"
-            statusTextView.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_dark))
+            serviceStatusTextView.text = "Running"
+            serviceStatusTextView.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_dark))
+            serviceStatusTextView.setBackgroundColor(ContextCompat.getColor(this, android.R.color.black))
         } else {
-            statusTextView.text = "Stopped"
-            statusTextView.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_dark))
+            serviceStatusTextView.text = "Stopped"
+            serviceStatusTextView.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_dark))
+            serviceStatusTextView.setBackgroundColor(ContextCompat.getColor(this, android.R.color.black))
+        }
+    }
+
+    // Функция для создания виброотклика при нажатии кнопок
+    private fun vibrateOnClick() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator.vibrate(VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE))
+        } else {
+            vibrator.vibrate(100)
         }
     }
 }

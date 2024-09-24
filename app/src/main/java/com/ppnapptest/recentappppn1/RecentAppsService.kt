@@ -50,7 +50,7 @@ class RecentAppsService : Service() {
         job = serviceScope.launch(Dispatchers.IO) {
             try {
                 while (isActive) {
-                    val isScriptRunning = Shell.su("pgrep -f updatMainRA.sh").exec().isSuccess
+                    val isScriptRunning = Shell.cmd("pgrep -f updatMainRA.sh").exec().isSuccess
 
                     if (!isScriptRunning) {
                         Log.d("RecentAppsService", "Скрипт не выполняется, перезапускаем...")
@@ -67,7 +67,7 @@ class RecentAppsService : Service() {
 
     private fun startScript() {
         try {
-            val result = Shell.su("/system/bin/sh /storage/emulated/0/.recentappppn1/.sh/updatMainRA.sh").exec()
+            val result = Shell.cmd("su -c '/system/bin/sh /storage/emulated/0/.recentappppn1/.sh/updatMainRA.sh'").exec()
 
             if (result.isSuccess) {
                 Log.d("RecentAppsService", "Скрипт успешно запущен")

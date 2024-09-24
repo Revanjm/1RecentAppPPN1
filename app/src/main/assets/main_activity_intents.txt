@@ -1,0 +1,1 @@
+*=android.intent.action.SEND=run_function;

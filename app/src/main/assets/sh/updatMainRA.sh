@@ -35,7 +35,7 @@ while true; do
 
     # Выводим результаты
     echo "$recent_app_cl"
-am broadcast -a android.intent.action.SEND --es run_function "$recent_app_cl" -n com.ppnapptest.recentappppn1/.RecentAppsReceiver
+    am broadcast -a android.intent.action.SEND --es run_function "$recent_app_cl" -n com.ppnapptest.recentappppn1/.RecentAppsReceiver > /dev/null 2>&1
     # Обновляем previous_apps
     previous_apps="$current_apps"
   fi
