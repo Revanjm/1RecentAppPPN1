@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Закругленные углы -->
+    <corners android:radius="8dp" />
+
+    <!-- Заливка для состояния сервиса -->
+    <solid android:color="@color/green" /> <!-- Для состояния Running -->
+    <!-- Чтобы поменять на красный для Stopped, замените @color/green на @color/red в коде программы -->
+
+    <!-- Тени или границы при необходимости -->
+    <stroke
+        android:width="2dp"
+        android:color="@android:color/black" />
+
+    <!-- Отступы внутри компонента -->
+    <padding
+        android:left="8dp"
+        android:top="4dp"
+        android:right="8dp"
+        android:bottom="4dp" />
+</shape>

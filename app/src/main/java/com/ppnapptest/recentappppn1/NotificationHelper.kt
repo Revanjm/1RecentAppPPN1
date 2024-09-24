@@ -40,8 +40,9 @@ class NotificationHelper(private val context: Context) {
 
         return NotificationCompat.Builder(context, "recent_apps_channel")
             .setContentTitle("Recent Apps Monitoring")
-            .setContentText("Monitoring running apps...")
+            .setContentText("RecentAppsService is running")
             .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setPriority(NotificationCompat.PRIORITY_LOW) // Low priority for service notification
             .setContentIntent(pendingIntent)
             .setOngoing(true) // Постоянное уведомление
             .build()
@@ -64,6 +65,7 @@ class NotificationHelper(private val context: Context) {
             .setContentTitle(title)
             .setContentText(message)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setPriority(NotificationCompat.PRIORITY_LOW) // Low priority for service notification
             .build()
 
         notificationManager.notify(notificationId, notification)

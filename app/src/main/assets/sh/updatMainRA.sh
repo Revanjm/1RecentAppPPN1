@@ -3,23 +3,10 @@ get_recent_apps() {
   dumpsys_output=$(dumpsys activity recents | grep -v 'mHiddenTasks=')
 
   # Извлекаем recent_apps
-  recent_apps=$(echo "$dumpsys_output" | grep -E 'A=|I=' | sed -E 's/.*A=[0-9]+://;s/.*I=//;s/Task\{[0-9a-f]+ //;s/\}//' | sed 's/[^a-zA-Z0-9.-]//g')
+  recent_apps=$(echo "$dumpsys_output" | grep -E 'A=|I=' | sed -E 's/.*A=[0-9]+://;s/.*I=//;s/Task\{[0-9a-f]+ //;s/\}//' | sed 's/[^a-zA-Z0-9\.\-]//g')
 
   # Возвращаем полученные данные
   echo "$recent_apps"
-}
-
-# Преобразование массива в строку с разделителем /=\
-convert_to_string() {
-  local apps_array=("$@")
-  local app_string=""
-
-  for app in "${apps_array[@]}"; do
-    app_string+="$app/=/"
-  done
-
-  # Удаляем последний разделитель /=\
-  echo "${app_string%/=/}"
 }
 
 # Инициализация
@@ -46,12 +33,9 @@ while true; do
       recent_app_cl="$current_apps"
     fi
 
-    # Преобразуем recent_app_cl в строку
-    app_string=$(convert_to_string "${recent_app_cl[@]}")
-
-    # Выполняем команду am broadcast
-    am broadcast -a android.intent.action.SEND --es run_function "$app_string" -n com.ppnapptest.имя_вашего_приложения/.IntIntReceiver
-
+    # Выводим результаты
+    echo "$recent_app_cl"
+am broadcast -a android.intent.action.SEND --es run_function "$recent_app_cl" -n com.ppnapptest.recentappppn1/.RecentAppsReceiver
     # Обновляем previous_apps
     previous_apps="$current_apps"
   fi

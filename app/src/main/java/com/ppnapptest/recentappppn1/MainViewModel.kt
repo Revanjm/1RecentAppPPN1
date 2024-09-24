@@ -7,11 +7,13 @@ import kotlinx.coroutines.launch
 import android.util.Log
 
 class MainViewModel(private val repository: RecentAppsRepository) : ViewModel() {
+
     val recentApps: LiveData<List<String>> = repository.recentApps
 
     fun updateRecentApps() {
         viewModelScope.launch {
             try {
+                // Вызываем обновление данных через скрипт
                 repository.updateRecentApps()
             } catch (e: Exception) {
                 Log.e("MainViewModel", "Error updating recent apps: ${e.message}")
@@ -19,10 +21,11 @@ class MainViewModel(private val repository: RecentAppsRepository) : ViewModel() 
         }
     }
 
-    // Новый метод для обновления при нажатии
+    // Новый метод для принудительного обновления при нажатии
     fun forceUpdateRecentApps() {
         viewModelScope.launch {
             try {
+                // Вызываем обновление данных через скрипт
                 repository.updateRecentApps()
             } catch (e: Exception) {
                 Log.e("MainViewModel", "Error forcing update of recent apps: ${e.message}")
