@@ -5,7 +5,6 @@
     android:layout_height="match_parent"
     android:background="@android:color/black">
 
-    <!-- Статус сервиса -->
     <TextView
         android:id="@+id/serviceStatusTextView"
         android:layout_width="wrap_content"
@@ -22,7 +21,6 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent" />
 
-    <!-- Кнопка запуска сервиса -->
     <Button
         android:id="@+id/startServiceButton"
         android:layout_width="wrap_content"
@@ -37,7 +35,6 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent" />
 
-    <!-- Кнопка остановки сервиса -->
     <Button
         android:id="@+id/stopServiceButton"
         android:layout_width="wrap_content"
@@ -52,7 +49,6 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent" />
 
-    <!-- Текст последних приложений -->
     <TextView
         android:id="@+id/recentAppsTextView"
         android:layout_width="0dp"
@@ -72,9 +68,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        app:layout_constraintTop_toBottomOf="@+id/recentAppsTextView"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent">
 
         <!-- Первая строка -->
         <TableRow
@@ -86,21 +82,24 @@
                 android:id="@+id/row_num_1"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="3"
+                android:layout_weight="1"
                 android:text="1"
-                android:visibility="gone"
                 android:gravity="center"
-                android:textColor="@android:color/white" />
+                android:textColor="@android:color/white"
+                android:visibility="gone" />
 
             <!-- Значение -->
             <TextView
                 android:id="@+id/text_view_1"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="17"
+                android:layout_weight="5"
                 android:text=""
                 android:textColor="@android:color/white"
-                android:gravity="start" />
+                android:gravity="start"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:scrollHorizontally="true" />
         </TableRow>
 
         <!-- Вторая строка -->
@@ -113,21 +112,24 @@
                 android:id="@+id/row_num_2"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="3"
+                android:layout_weight="1"
                 android:text="2"
-                android:visibility="gone"
                 android:gravity="center"
-                android:textColor="@android:color/white" />
+                android:textColor="@android:color/white"
+                android:visibility="gone" />
 
             <!-- Значение -->
             <TextView
                 android:id="@+id/text_view_2"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="17"
+                android:layout_weight="5"
                 android:text=""
                 android:textColor="@android:color/white"
-                android:gravity="start" />
+                android:gravity="start"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:scrollHorizontally="true" />
         </TableRow>
 
         <!-- Третья строка -->
@@ -140,21 +142,24 @@
                 android:id="@+id/row_num_3"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="3"
+                android:layout_weight="1"
                 android:text="3"
-                android:visibility="gone"
                 android:gravity="center"
-                android:textColor="@android:color/white" />
+                android:textColor="@android:color/white"
+                android:visibility="gone" />
 
             <!-- Значение -->
             <TextView
                 android:id="@+id/text_view_3"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="17"
+                android:layout_weight="5"
                 android:text=""
                 android:textColor="@android:color/white"
-                android:gravity="start" />
+                android:gravity="start"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:scrollHorizontally="true" />
         </TableRow>
 
         <!-- Четвертая строка -->
@@ -167,21 +172,24 @@
                 android:id="@+id/row_num_4"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="3"
+                android:layout_weight="1"
                 android:text="4"
-                android:visibility="gone"
                 android:gravity="center"
-                android:textColor="@android:color/white" />
+                android:textColor="@android:color/white"
+                android:visibility="gone" />
 
             <!-- Значение -->
             <TextView
                 android:id="@+id/text_view_4"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="17"
+                android:layout_weight="5"
                 android:text=""
                 android:textColor="@android:color/white"
-                android:gravity="start" />
+                android:gravity="start"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:scrollHorizontally="true" />
         </TableRow>
 
         <!-- Пятая строка -->
@@ -194,21 +202,24 @@
                 android:id="@+id/row_num_5"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="3"
+                android:layout_weight="1"
                 android:text="5"
-                android:visibility="gone"
                 android:gravity="center"
-                android:textColor="@android:color/white" />
+                android:textColor="@android:color/white"
+                android:visibility="gone" />
 
             <!-- Значение -->
             <TextView
                 android:id="@+id/text_view_5"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="17"
+                android:layout_weight="5"
                 android:text=""
                 android:textColor="@android:color/white"
-                android:gravity="start" />
+                android:gravity="start"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:scrollHorizontally="true" />
         </TableRow>
 
         <!-- Шестая строка -->
@@ -221,21 +232,24 @@
                 android:id="@+id/row_num_6"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="3"
+                android:layout_weight="1"
                 android:text="6"
-                android:visibility="gone"
                 android:gravity="center"
-                android:textColor="@android:color/white" />
+                android:textColor="@android:color/white"
+                android:visibility="gone" />
 
             <!-- Значение -->
             <TextView
                 android:id="@+id/text_view_6"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="17"
+                android:layout_weight="5"
                 android:text=""
                 android:textColor="@android:color/white"
-                android:gravity="start" />
+                android:gravity="start"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:scrollHorizontally="true" />
         </TableRow>
 
         <!-- Седьмая строка -->
@@ -248,21 +262,24 @@
                 android:id="@+id/row_num_7"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="3"
+                android:layout_weight="1"
                 android:text="7"
-                android:visibility="gone"
                 android:gravity="center"
-                android:textColor="@android:color/white" />
+                android:textColor="@android:color/white"
+                android:visibility="gone" />
 
             <!-- Значение -->
             <TextView
                 android:id="@+id/text_view_7"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="17"
+                android:layout_weight="5"
                 android:text=""
                 android:textColor="@android:color/white"
-                android:gravity="start" />
+                android:gravity="start"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:scrollHorizontally="true" />
         </TableRow>
 
         <!-- Восьмая строка -->
@@ -275,21 +292,24 @@
                 android:id="@+id/row_num_8"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="3"
+                android:layout_weight="1"
                 android:text="8"
-                android:visibility="gone"
                 android:gravity="center"
-                android:textColor="@android:color/white" />
+                android:textColor="@android:color/white"
+                android:visibility="gone" />
 
             <!-- Значение -->
             <TextView
                 android:id="@+id/text_view_8"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="17"
+                android:layout_weight="5"
                 android:text=""
                 android:textColor="@android:color/white"
-                android:gravity="start" />
+                android:gravity="start"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:scrollHorizontally="true" />
         </TableRow>
 
         <!-- Девятая строка -->
@@ -302,21 +322,24 @@
                 android:id="@+id/row_num_9"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="3"
+                android:layout_weight="1"
                 android:text="9"
                 android:gravity="center"
-                android:visibility="gone"
-                android:textColor="@android:color/white" />
+                android:textColor="@android:color/white"
+                android:visibility="gone" />
 
             <!-- Значение -->
             <TextView
                 android:id="@+id/text_view_9"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="17"
+                android:layout_weight="5"
                 android:text=""
                 android:textColor="@android:color/white"
-                android:gravity="start" />
+                android:gravity="start"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:scrollHorizontally="true" />
         </TableRow>
 
         <!-- Десятая строка -->
@@ -329,21 +352,24 @@
                 android:id="@+id/row_num_10"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="3"
+                android:layout_weight="1"
                 android:text="10"
                 android:gravity="center"
-                android:visibility="gone"
-                android:textColor="@android:color/white" />
+                android:textColor="@android:color/white"
+                android:visibility="gone" />
 
             <!-- Значение -->
             <TextView
                 android:id="@+id/text_view_10"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="17"
+                android:layout_weight="5"
                 android:text=""
                 android:textColor="@android:color/white"
-                android:gravity="start" />
+                android:gravity="start"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:scrollHorizontally="true" />
         </TableRow>
 
     </TableLayout>

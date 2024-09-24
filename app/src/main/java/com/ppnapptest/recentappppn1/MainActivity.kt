@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         // Отключаем аппаратное ускорение
-        window.setFlags(0, 0)
+            window.setFlags(0, 0)
 
         recentAppsTextView = findViewById(R.id.recentAppsTextView)
         viewModel = ViewModelProvider(this, MainViewModelFactory(RecentAppsRepository(this)))[MainViewModel::class.java]
@@ -168,7 +168,8 @@ class MainActivity : AppCompatActivity() {
 
         // Обновляем текст строк и показываем их снова (с учётом новых данных)
         textViews.forEachIndexed { index, textView ->
-            val text = currentData.getOrNull(index) ?: ""
+            // Убираем цифры перед значениями, например: "1 приложение" -> "приложение"
+            val text = currentData.getOrNull(index)?.replace(Regex("^\\d+\\s+"), "") ?: ""
             textView.text = text
 
             // Если правый текст пустой, скрываем левый номер, иначе показываем его
@@ -189,6 +190,7 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         unregisterReceiver(receiver)
     }
+
 
     private fun checkPermissions() {
         // Проверка рут-доступа
