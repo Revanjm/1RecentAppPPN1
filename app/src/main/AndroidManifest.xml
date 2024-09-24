@@ -14,6 +14,8 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
 
     <!-- Настройки приложения -->
     <application
@@ -49,11 +51,15 @@
         <!-- Статический ресивер RecentAppsReceiver -->
         <receiver
             android:name=".RecentAppsReceiver"
-            android:exported="false"> <!-- Установлено в false, так как ресивер только для внутреннего использования -->
+            android:exported="true"> <!-- Экспортируемый для внешних интентов -->
             <intent-filter>
+                <!-- Внешний системный интент -->
                 <action android:name="android.intent.action.SEND" />
+                <!-- Внутренний кастомный интент -->
+                <action android:name="com.ppnapptest.recentappppn1.CUSTOM_INTENT" />
             </intent-filter>
         </receiver>
+
 
     </application>
 

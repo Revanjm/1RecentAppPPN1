@@ -11,8 +11,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import android.os.VibrationEffect
-import android.os.Vibrator
 import android.provider.Settings
 import android.util.Log
 import android.widget.Button
@@ -22,15 +20,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
-import com.google.android.material.snackbar.Snackbar
 import com.topjohnwu.superuser.Shell
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import java.io.BufferedReader
 import java.io.File
 import java.io.IOException
-import java.io.InputStreamReader
 
 class MainActivity : AppCompatActivity() {
     private val PERMISSION_REQUEST_CODE = 1
@@ -39,7 +31,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var viewModel: MainViewModel
     private lateinit var recentAppsTextView: TextView
     private lateinit var receiver: BroadcastReceiver
-    private lateinit var serviceStatusTextView: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,7 +40,6 @@ class MainActivity : AppCompatActivity() {
         window.setFlags(0, 0)
 
         recentAppsTextView = findViewById(R.id.recentAppsTextView)
-        serviceStatusTextView = findViewById(R.id.serviceStatusTextView)
         viewModel = ViewModelProvider(this, MainViewModelFactory(RecentAppsRepository(this)))[MainViewModel::class.java]
         viewModel.recentApps.observe(this) { data ->
             Log.d("MainActivity", "Recent apps: $data")
@@ -64,14 +54,14 @@ class MainActivity : AppCompatActivity() {
 
         val startServiceButton: Button = findViewById(R.id.startServiceButton)
         val stopServiceButton: Button = findViewById(R.id.stopServiceButton)
+        val serviceStatusTextView: TextView = findViewById(R.id.serviceStatusTextView)
 
-        // Update UI based on service running state
-        val isServiceRunning = isServiceRunning(this, RecentAppsService::class.java)
-        updateServiceStatusUI(isServiceRunning)
+        // Обновляем UI в зависимости от состояния сервиса
+        var isServiceRunning = isServiceRunning(this, RecentAppsService::class.java)
+        updateServiceStatusUI(isServiceRunning, serviceStatusTextView)
 
-        // Start service button
+        // Кнопка запуска сервиса
         startServiceButton.setOnClickListener {
-            vibrateOnClick()
             if (!isServiceRunning) {
                 val intent = Intent(this, RecentAppsService::class.java)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -79,19 +69,20 @@ class MainActivity : AppCompatActivity() {
                 } else {
                     startService(intent)
                 }
-                Toast.makeText(this, "Сервис запущен", Toast.LENGTH_SHORT).show()
-                updateServiceStatusUI(true)
+                Toast.makeText(this, "Сервис запущен", Toast.LENGTH_SHORT).show() // Toast для старта сервиса
+                updateServiceStatusUI(true, serviceStatusTextView)
+                isServiceRunning = true
             }
         }
 
-        // Stop service button
+        // Кнопка остановки сервиса
         stopServiceButton.setOnClickListener {
-            vibrateOnClick()
             if (isServiceRunning) {
                 val intent = Intent(this, RecentAppsService::class.java)
                 stopService(intent)
-                Toast.makeText(this, "Сервис остановлен", Toast.LENGTH_SHORT).show()
-                updateServiceStatusUI(false)
+                Toast.makeText(this, "Сервис остановлен", Toast.LENGTH_SHORT).show() // Toast для остановки сервиса
+                updateServiceStatusUI(false, serviceStatusTextView)
+                isServiceRunning = false
             }
         }
     }
@@ -99,17 +90,24 @@ class MainActivity : AppCompatActivity() {
     private fun initializeBroadcastReceiver() {
         receiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
-                // Обработка полученного интента с функцией run_function
+                Log.d("MainActivity", "Intent received")
                 val recentAppCl = intent.getStringExtra("run_function")
-                recentAppCl?.let {
-                    Log.d("MainActivity", "Received data: $it")
-                    updateUI(it)
+                if (recentAppCl != null) {
+
+                    updateUI(recentAppCl)
+                } else {
+                    Log.d("MainActivity", "run_function is null")
                 }
             }
         }
 
-        // Регистрируем ресивер для действия android.intent.action.SEND
-        val intentFilter = IntentFilter("android.intent.action.SEND")
+        // Регистрируем ресивер для действия как внешних, так и внутренних интентов
+        val intentFilter = IntentFilter().apply {
+            addAction("com.ppnapptest.recentappppn1.CUSTOM_INTENT") // кастомный интент для внутреннего использования
+            addAction(Intent.ACTION_SEND) // системный интент для внешних приложений
+        }
+
+        // Проверка на версию Android
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(receiver, intentFilter, Context.RECEIVER_NOT_EXPORTED)
         } else {
@@ -133,20 +131,14 @@ class MainActivity : AppCompatActivity() {
         if (Shell.rootAccess()) {
             Log.d("MainActivity", "Root доступ получен")
         } else {
-            // Запрос root-доступа через su
-            Toast.makeText(this, "Получение root-доступа...", Toast.LENGTH_LONG).show()
             Shell.su("su").submit { result ->
-                if (result.isSuccess) {
-                    Log.d("MainActivity", "Root доступ получен после команды su")
-                } else {
-                    Toast.makeText(this, "Не удалось получить root-доступ", Toast.LENGTH_LONG).show()
+                if (!result.isSuccess) {
                     finish()
                 }
             }
         }
 
         val permissionsToRequest = mutableListOf<String>()
-
         val permissions = arrayOf(
             Manifest.permission.MANAGE_EXTERNAL_STORAGE,
             Manifest.permission.POST_NOTIFICATIONS,
@@ -169,22 +161,16 @@ class MainActivity : AppCompatActivity() {
             ActivityCompat.requestPermissions(this, permissionsToRequest.toTypedArray(), PERMISSION_REQUEST_CODE)
         }
 
-        // Проверка и запрос разрешений на использование статистики
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            if (!hasUsageStatsPermission()) {
-                requestUsageStatsPermission()
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !hasUsageStatsPermission()) {
+            requestUsageStatsPermission()
         }
 
-        // Запрос на разрешение отправки уведомлений
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (!hasNotificationPermission()) {
-                ActivityCompat.requestPermissions(
-                    this,
-                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-                    NOTIFICATION_PERMISSION_REQUEST_CODE
-                )
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !hasNotificationPermission()) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                NOTIFICATION_PERMISSION_REQUEST_CODE
+            )
         }
     }
 
@@ -214,7 +200,7 @@ class MainActivity : AppCompatActivity() {
         val shFolder = File(Environment.getExternalStorageDirectory().absolutePath + "/.recentappppn1/.sh/")
 
         if (!dbFolder.exists()) dbFolder.mkdirs()
-        if (!shFolder.exists()) dbFolder.mkdirs()
+        if (!shFolder.exists()) shFolder.mkdirs()
 
         copyAssetFolder("db", dbFolder.absolutePath)
         copyAssetFolder("sh", shFolder.absolutePath)
@@ -236,11 +222,9 @@ class MainActivity : AppCompatActivity() {
             }
         } catch (e: IOException) {
             Log.e("MainActivity", "Error copying assets: ${e.message}")
-            Toast.makeText(this, "Ошибка при копировании файлов: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 
-    // Function to check if the service is running
     private fun isServiceRunning(context: Context, serviceClass: Class<*>): Boolean {
         val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         for (service in manager.getRunningServices(Int.MAX_VALUE)) {
@@ -251,25 +235,13 @@ class MainActivity : AppCompatActivity() {
         return false
     }
 
-    // Function to update UI based on service running status
-    private fun updateServiceStatusUI(isRunning: Boolean) {
+    private fun updateServiceStatusUI(isRunning: Boolean, statusTextView: TextView) {
         if (isRunning) {
-            serviceStatusTextView.text = "Running"
-            serviceStatusTextView.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_dark))
-            serviceStatusTextView.setBackgroundColor(ContextCompat.getColor(this, android.R.color.white))
+            statusTextView.text = "Running"
+            statusTextView.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_dark))
         } else {
-            serviceStatusTextView.text = "Stopped"
-            serviceStatusTextView.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_dark))
-            serviceStatusTextView.setBackgroundColor(ContextCompat.getColor(this, android.R.color.black))
-        }
-    }
-
-    private fun vibrateOnClick() {
-        val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vibrator.vibrate(VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE))
-        } else {
-            vibrator.vibrate(100)
+            statusTextView.text = "Stopped"
+            statusTextView.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_dark))
         }
     }
 }
