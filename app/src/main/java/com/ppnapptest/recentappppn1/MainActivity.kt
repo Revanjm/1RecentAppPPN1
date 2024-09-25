@@ -26,7 +26,6 @@ import java.io.File
 import java.io.IOException
 import android.view.View
 
-
 class MainActivity : AppCompatActivity() {
     private val PERMISSION_REQUEST_CODE = 1
     private val NOTIFICATION_PERMISSION_REQUEST_CODE = 2
@@ -43,7 +42,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         // Отключаем аппаратное ускорение
-            window.setFlags(0, 0)
+        window.setFlags(0, 0)
 
         recentAppsTextView = findViewById(R.id.recentAppsTextView)
         viewModel = ViewModelProvider(this, MainViewModelFactory(RecentAppsRepository(this)))[MainViewModel::class.java]
@@ -125,7 +124,7 @@ class MainActivity : AppCompatActivity() {
         val currentData = newData.split("\n")
 
         // Загружаем анимации
-        val slideUpOrDownAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_up_or_down)  // Анимация перемежения
+        val slideVerticalAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_vertical)  // Анимация перемещения по вертикали
         val slideOutLeftAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_out_left)  // Анимация для старых элементов
         val slideInRightAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_in_right)  // Анимация для новых элементов
 
@@ -146,8 +145,8 @@ class MainActivity : AppCompatActivity() {
         // Проходим по предыдущим данным и применяем анимации
         previousData.forEachIndexed { index, previousItem ->
             if (currentData.contains(previousItem)) {
-                // Строка осталась, применяем анимацию перемежения
-                textViews.getOrNull(index)?.startAnimation(slideUpOrDownAnimation)
+                // Строка осталась, применяем анимацию перемещения по вертикали
+                textViews.getOrNull(index)?.startAnimation(slideVerticalAnimation)
             } else {
                 // Строка не пришла в новом обновлении, уезжает влево
                 textViews.getOrNull(index)?.startAnimation(slideOutLeftAnimation)
@@ -170,6 +169,7 @@ class MainActivity : AppCompatActivity() {
 
         Log.d("MainActivity", "UI обновлено с данными: $newData")
     }
+
 
     override fun onDestroy() {
         super.onDestroy()
