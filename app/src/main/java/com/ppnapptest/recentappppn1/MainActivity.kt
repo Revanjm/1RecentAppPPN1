@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
@@ -24,7 +25,6 @@ import androidx.lifecycle.ViewModelProvider
 import com.topjohnwu.superuser.Shell
 import java.io.File
 import java.io.IOException
-import android.view.View
 
 class MainActivity : AppCompatActivity() {
     private val PERMISSION_REQUEST_CODE = 1
@@ -45,16 +45,21 @@ class MainActivity : AppCompatActivity() {
         window.setFlags(0, 0)
 
         recentAppsTextView = findViewById(R.id.recentAppsTextView)
-        viewModel = ViewModelProvider(this, MainViewModelFactory(RecentAppsRepository(this)))[MainViewModel::class.java]
+        viewModel = ViewModelProvider(
+            this,
+            MainViewModelFactory(RecentAppsRepository(this))
+        )[MainViewModel::class.java]
         viewModel.recentApps.observe(this) { data ->
             Log.d("MainActivity", "Recent apps: $data")
             recentAppsTextView.text = data.joinToString(separator = "\n") { app ->
                 app.takeUnless { it == "NULL" || it.contains("/") } ?: "Invalid app data"
             }.ifEmpty { "Список последних приложений пуст" }
+            sendToOverlay(data) // Отправка списка приложений в OverlayService
         }
 
         initializeBroadcastReceiver()
         checkPermissions()
+        checkOverlayPermission() // Проверяем разрешение на отображение поверх всех окон
         setupAppFolders()
 
         val startServiceButton: Button = findViewById(R.id.startServiceButton)
@@ -74,9 +79,12 @@ class MainActivity : AppCompatActivity() {
                 } else {
                     startService(intent)
                 }
-                Toast.makeText(this, "Сервис запущен", Toast.LENGTH_SHORT).show() // Toast для старта сервиса
+                Toast.makeText(this, "Сервис запущен", Toast.LENGTH_SHORT).show()
                 updateServiceStatusUI(true, serviceStatusTextView)
                 isServiceRunning = true
+
+                // Запуск OverlayService
+                startOverlayService()
             }
         }
 
@@ -85,9 +93,12 @@ class MainActivity : AppCompatActivity() {
             if (isServiceRunning) {
                 val intent = Intent(this, RecentAppsService::class.java)
                 stopService(intent)
-                Toast.makeText(this, "Сервис остановлен", Toast.LENGTH_SHORT).show() // Toast для остановки сервиса
+                Toast.makeText(this, "Сервис остановлен", Toast.LENGTH_SHORT).show()
                 updateServiceStatusUI(false, serviceStatusTextView)
                 isServiceRunning = false
+
+                // Остановка OverlayService
+                stopOverlayService()
             }
         }
     }
@@ -99,19 +110,20 @@ class MainActivity : AppCompatActivity() {
                 val recentAppCl = intent.getStringExtra("run_function")
                 if (recentAppCl != null) {
                     updateUI(recentAppCl)
+                    sendToOverlay(recentAppCl.split("\n")) // Передаем список строк в OverlayService
                 } else {
                     Log.d("MainActivity", "run_function is null")
                 }
             }
+
         }
 
         // Регистрируем ресивер для действия как внешних, так и внутренних интентов
         val intentFilter = IntentFilter().apply {
-            addAction("com.ppnapptest.recentappppn1.CUSTOM_INTENT") // кастомный интент для внутреннего использования
-            addAction(Intent.ACTION_SEND) // системный интент для внешних приложений
+            addAction("com.ppnapptest.recentappppn1.CUSTOM_INTENT")
+            addAction(Intent.ACTION_SEND)
         }
 
-        // Проверка на версию Android
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(receiver, intentFilter, Context.RECEIVER_NOT_EXPORTED)
         } else {
@@ -120,15 +132,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateUI(newData: String) {
-        // Разделяем строку по разделителю (например, если это список приложений через \n)
         val currentData = newData.split("\n")
 
-        // Загружаем анимации
-        val slideVerticalAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_vertical)  // Анимация перемещения по вертикали
-        val slideOutLeftAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_out_left)  // Анимация для старых элементов
-        val slideInRightAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_in_right)  // Анимация для новых элементов
-
-        // Найдем строки таблицы (правая колонка)
         val textView1 = findViewById<TextView>(R.id.text_view_1)
         val textView2 = findViewById<TextView>(R.id.text_view_2)
         val textView3 = findViewById<TextView>(R.id.text_view_3)
@@ -140,45 +145,57 @@ class MainActivity : AppCompatActivity() {
         val textView9 = findViewById<TextView>(R.id.text_view_9)
         val textView10 = findViewById<TextView>(R.id.text_view_10)
 
-        val textViews = listOf(textView1, textView2, textView3, textView4, textView5, textView6, textView7, textView8, textView9, textView10)
+        val textViews = listOf(
+            textView1,
+            textView2,
+            textView3,
+            textView4,
+            textView5,
+            textView6,
+            textView7,
+            textView8,
+            textView9,
+            textView10
+        )
 
-        // Проходим по предыдущим данным и применяем анимации
         previousData.forEachIndexed { index, previousItem ->
             if (currentData.contains(previousItem)) {
-                // Строка осталась, применяем анимацию перемещения по вертикали
-                textViews.getOrNull(index)?.startAnimation(slideVerticalAnimation)
-            } else {
-                // Строка не пришла в новом обновлении, уезжает влево
-                textViews.getOrNull(index)?.startAnimation(slideOutLeftAnimation)
+                textViews.getOrNull(index)
+                    ?.startAnimation(AnimationUtils.loadAnimation(this, R.anim.fade_out))
             }
         }
 
-        // Обновляем текст строк и показываем их снова (с учётом новых данных)
         textViews.forEachIndexed { index, textView ->
             val text = currentData.getOrNull(index) ?: ""
-
-            // Если элемент новый, применяем анимацию появления справа
-            if (previousData.size <= index || previousData[index] != text) {
-                textView.startAnimation(slideInRightAnimation)
-            }
             textView.text = text
         }
 
-        // Сохраняем текущее состояние как предыдущее
         previousData = currentData
-
-        Log.d("MainActivity", "UI обновлено с данными: $newData")
     }
 
+    private fun startOverlayService() {
+        val intent = Intent(this, OverlayService::class.java)
+        ContextCompat.startForegroundService(this, intent)
+    }
+
+    private fun stopOverlayService() {
+        val intent = Intent(this, OverlayService::class.java)
+        stopService(intent)
+    }
+
+    // Отправляем данные в OverlayService
+    private fun sendToOverlay(data: List<String>) {
+        val intent = Intent("com.ppnapptest.recentappppn1.UPDATE_OVERLAY")
+        intent.putStringArrayListExtra("overlay_data", ArrayList(data))  // Передаем список
+        sendBroadcast(intent)
+    }
 
     override fun onDestroy() {
         super.onDestroy()
         unregisterReceiver(receiver)
     }
 
-
     private fun checkPermissions() {
-        // Проверка рут-доступа
         if (Shell.rootAccess()) {
             Log.d("MainActivity", "Root доступ получен")
         } else {
@@ -203,13 +220,21 @@ class MainActivity : AppCompatActivity() {
         )
 
         permissions.forEach { perm ->
-            if (ContextCompat.checkSelfPermission(this, perm) != PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    perm
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
                 permissionsToRequest.add(perm)
             }
         }
 
         if (permissionsToRequest.isNotEmpty()) {
-            ActivityCompat.requestPermissions(this, permissionsToRequest.toTypedArray(), PERMISSION_REQUEST_CODE)
+            ActivityCompat.requestPermissions(
+                this,
+                permissionsToRequest.toTypedArray(),
+                PERMISSION_REQUEST_CODE
+            )
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !hasUsageStatsPermission()) {
@@ -222,6 +247,17 @@ class MainActivity : AppCompatActivity() {
                 arrayOf(Manifest.permission.POST_NOTIFICATIONS),
                 NOTIFICATION_PERMISSION_REQUEST_CODE
             )
+        }
+    }
+
+    // Проверяем разрешение на отображение поверх всех окон
+    private fun checkOverlayPermission() {
+        if (!Settings.canDrawOverlays(this)) {
+            val intent = Intent(
+                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:$packageName")
+            )
+            startActivityForResult(intent, PERMISSION_REQUEST_CODE)
         }
     }
 
@@ -247,8 +283,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupAppFolders() {
-        val dbFolder = File(Environment.getExternalStorageDirectory().absolutePath + "/.recentappppn1/.db/")
-        val shFolder = File(Environment.getExternalStorageDirectory().absolutePath + "/.recentappppn1/.sh/")
+        val dbFolder =
+            File(Environment.getExternalStorageDirectory().absolutePath + "/.recentappppn1/.db/")
+        val shFolder =
+            File(Environment.getExternalStorageDirectory().absolutePath + "/.recentappppn1/.sh/")
 
         if (!dbFolder.exists()) dbFolder.mkdirs()
         if (!shFolder.exists()) shFolder.mkdirs()
@@ -289,7 +327,12 @@ class MainActivity : AppCompatActivity() {
     private fun updateServiceStatusUI(isRunning: Boolean, statusTextView: TextView) {
         if (isRunning) {
             statusTextView.text = "Running"
-            statusTextView.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_light))
+            statusTextView.setTextColor(
+                ContextCompat.getColor(
+                    this,
+                    android.R.color.holo_green_light
+                )
+            )
             statusTextView.setBackgroundColor(ContextCompat.getColor(this, android.R.color.black))
         } else {
             statusTextView.text = "Stopped"

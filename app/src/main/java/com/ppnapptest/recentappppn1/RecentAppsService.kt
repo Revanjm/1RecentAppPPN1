@@ -19,10 +19,8 @@ class RecentAppsService : Service() {
         super.onCreate()
 
         if (Shell.rootAccess()) {
-            // Root права получены, уведомления не выводим
             Log.d("RecentAppsService", "Root доступ подтвержден.")
         } else {
-            // Если root-доступ не получен, пытаемся его получить через команду su
             val result = Shell.su("su").exec()
             if (!result.isSuccess) {
                 Toast.makeText(this, "Не удалось получить Root доступ, сервис остановлен", Toast.LENGTH_SHORT).show()
@@ -40,6 +38,9 @@ class RecentAppsService : Service() {
 
         // Запуск процесса наблюдения за выполнением скрипта
         observeAndRestartScript()
+
+        // Запуск OverlayService
+        startOverlayService()
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -55,7 +56,7 @@ class RecentAppsService : Service() {
                         startScript()
                     }
 
-                    delay(500L) // Скрипт выполняется с интервалом не меньше 0.5 секунды
+                    delay(500L)
                 }
             } catch (e: Exception) {
                 Log.e("RecentAppsService", "Ошибка наблюдения за скриптом: ${e.message}")
@@ -79,6 +80,16 @@ class RecentAppsService : Service() {
         }
     }
 
+    private fun startOverlayService() {
+        val intent = Intent(this, OverlayService::class.java)
+        startService(intent)
+    }
+
+    private fun stopOverlayService() {
+        val intent = Intent(this, OverlayService::class.java)
+        stopService(intent)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         job?.cancel()
@@ -87,6 +98,9 @@ class RecentAppsService : Service() {
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.cancel(1)
         Toast.makeText(this, "Сервис RecentAppsService завершён", Toast.LENGTH_SHORT).show()
+
+        // Остановка OverlayService при уничтожении
+        stopOverlayService()
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {

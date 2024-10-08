@@ -13,8 +13,8 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
 
     <!-- Настройки приложения -->
@@ -52,7 +52,7 @@
         <!-- Статический ресивер RecentAppsReceiver -->
         <receiver
             android:name=".RecentAppsReceiver"
-            android:exported="true"> <!-- Экспортируемый для внешних интентов -->
+            android:exported="true">
             <intent-filter>
                 <!-- Внешний системный интент -->
                 <action android:name="android.intent.action.SEND" />
@@ -60,8 +60,19 @@
                 <action android:name="com.ppnapptest.recentappppn1.CUSTOM_INTENT" />
             </intent-filter>
         </receiver>
+        <receiver
+            android:name=".OverlayReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.ppnapptest.recentappppn1.UPDATE_OVERLAY" />
+            </intent-filter>
+        </receiver>
 
+        <!-- OverlayService для работы с оверлеем -->
+        <service
+            android:name=".OverlayService"
+            android:permission="android.permission.SYSTEM_ALERT_WINDOW"
+            android:exported="false"/>
 
     </application>
-
 </manifest>
