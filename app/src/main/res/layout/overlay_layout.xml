@@ -6,13 +6,17 @@
     android:background="#80000000"
     android:padding="10dp">
 
-<TextView
-android:id="@+id/overlay_text"
-android:layout_width="wrap_content"
-android:layout_height="wrap_content"
-android:textColor="#FFFFFF"
-    android:textSize="16sp"
-    android:maxLines="10"
-    android:ellipsize="end" />
-
-    </LinearLayout>
+    <TextView
+        android:id="@+id/overlay_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#FFFFFF"
+        android:textSize="12sp"
+        android:maxLines="30"
+    android:ellipsize="end"
+    android:padding="5dp"
+    android:scrollbars="none"
+    android:layout_margin="5dp"
+    android:gravity="start"
+    android:background="@drawable/text_border" />
+</LinearLayout>

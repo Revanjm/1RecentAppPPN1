@@ -17,14 +17,20 @@ class OverlayReceiver : BroadcastReceiver() {
             if (recentApps != null && recentApps.isNotEmpty()) {
                 Log.d("OverlayReceiver", "Received recent apps: $recentApps")
 
-                // Разбиваем приложения на строки (по пробелам или другим разделителям)
+                // Разбиваем приложения на строки
                 val recentAppsList = recentApps.split("\n").joinToString("\n")
 
                 // Отправляем данные в OverlayService для обновления
                 val overlayIntent = Intent(context, OverlayService::class.java).apply {
                     putExtra("run_function", recentAppsList) // Передаем данные через ключ "run_function"
                 }
-                context.startService(overlayIntent)
+
+                // Проверяем версию Android для запуска сервиса
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    context.startForegroundService(overlayIntent)
+                } else {
+                    context.startService(overlayIntent)
+                }
 
                 Log.d("OverlayReceiver", "Started OverlayService with recent apps list")
             } else {
