@@ -15,6 +15,7 @@
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
 
 
     <!-- Настройки приложения -->
@@ -45,7 +46,7 @@
         <!-- Service RecentAppsService -->
         <service
             android:name=".RecentAppsService"
-            android:foregroundServiceType="dataSync"
+            android:foregroundServiceType="mediaProjection"
             android:permission="android.permission.FOREGROUND_SERVICE"
             android:exported="false" />
 
@@ -60,18 +61,21 @@
                 <action android:name="com.ppnapptest.recentappppn1.CUSTOM_INTENT" />
             </intent-filter>
         </receiver>
+
+        <!-- Статический ресивер OverlayReceiver -->
         <receiver
             android:name=".OverlayReceiver"
-            android:exported="false">
+            android:exported="true">
             <intent-filter>
-                <action android:name="com.ppnapptest.recentappppn1.UPDATE_OVERLAY" />
+                <!-- Принимает интенты с action SEND -->
+                <action android:name="android.intent.action.SEND" />
             </intent-filter>
         </receiver>
 
-        <!-- OverlayService для работы с оверлеем -->
         <service
             android:name=".OverlayService"
             android:permission="android.permission.SYSTEM_ALERT_WINDOW"
+            android:foregroundServiceType="mediaProjection"
             android:exported="false"/>
 
     </application>

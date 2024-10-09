@@ -2,7 +2,6 @@ package com.ppnapptest.recentappppn1
 
 import android.Manifest
 import android.app.ActivityManager
-import android.app.NotificationManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -14,7 +13,6 @@ import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings
 import android.util.Log
-import android.view.animation.AnimationUtils
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
@@ -25,6 +23,8 @@ import androidx.lifecycle.ViewModelProvider
 import com.topjohnwu.superuser.Shell
 import java.io.File
 import java.io.IOException
+import android.app.NotificationManager
+
 
 class MainActivity : AppCompatActivity() {
     private val PERMISSION_REQUEST_CODE = 1
@@ -33,9 +33,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var viewModel: MainViewModel
     private lateinit var recentAppsTextView: TextView
     private lateinit var receiver: BroadcastReceiver
-
-    // Предыдущее состояние строк
-    private var previousData: List<String> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,7 +51,6 @@ class MainActivity : AppCompatActivity() {
             recentAppsTextView.text = data.joinToString(separator = "\n") { app ->
                 app.takeUnless { it == "NULL" || it.contains("/") } ?: "Invalid app data"
             }.ifEmpty { "Список последних приложений пуст" }
-            sendToOverlay(data) // Отправка списка приложений в OverlayService
         }
 
         initializeBroadcastReceiver()
@@ -110,12 +106,10 @@ class MainActivity : AppCompatActivity() {
                 val recentAppCl = intent.getStringExtra("run_function")
                 if (recentAppCl != null) {
                     updateUI(recentAppCl)
-                    sendToOverlay(recentAppCl.split("\n")) // Передаем список строк в OverlayService
                 } else {
                     Log.d("MainActivity", "run_function is null")
                 }
             }
-
         }
 
         // Регистрируем ресивер для действия как внешних, так и внутренних интентов
@@ -158,19 +152,10 @@ class MainActivity : AppCompatActivity() {
             textView10
         )
 
-        previousData.forEachIndexed { index, previousItem ->
-            if (currentData.contains(previousItem)) {
-                textViews.getOrNull(index)
-                    ?.startAnimation(AnimationUtils.loadAnimation(this, R.anim.fade_out))
-            }
-        }
-
         textViews.forEachIndexed { index, textView ->
             val text = currentData.getOrNull(index) ?: ""
             textView.text = text
         }
-
-        previousData = currentData
     }
 
     private fun startOverlayService() {
@@ -181,13 +166,6 @@ class MainActivity : AppCompatActivity() {
     private fun stopOverlayService() {
         val intent = Intent(this, OverlayService::class.java)
         stopService(intent)
-    }
-
-    // Отправляем данные в OverlayService
-    private fun sendToOverlay(data: List<String>) {
-        val intent = Intent("com.ppnapptest.recentappppn1.UPDATE_OVERLAY")
-        intent.putStringArrayListExtra("overlay_data", ArrayList(data))  // Передаем список
-        sendBroadcast(intent)
     }
 
     override fun onDestroy() {
@@ -341,3 +319,4 @@ class MainActivity : AppCompatActivity() {
         }
     }
 }
+
